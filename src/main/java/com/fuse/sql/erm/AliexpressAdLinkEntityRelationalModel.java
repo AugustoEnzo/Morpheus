@@ -5,12 +5,12 @@ import com.fuse.sql.constants.AliexpressAdsLinks;
 import com.fuse.sql.models.AliexpressAdLinkModel;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
-public class AliexpressAdLinksEntityRelationalModel implements AliexpressAdsLinks {
-    Logger logger = Logger.getLogger(AliexpressAdLinksEntityRelationalModel.class.getName());
+public class AliexpressAdLinkEntityRelationalModel implements AliexpressAdsLinks {
+    Logger logger = Logger.getLogger(AliexpressAdLinkEntityRelationalModel.class.getName());
     Connection conn = new PostgresJDBCDriverConnector().conn;
 
     public void createAliAdsLinksTable() {
@@ -23,8 +23,8 @@ public class AliexpressAdLinksEntityRelationalModel implements AliexpressAdsLink
         }
     }
 
-    public List<AliexpressAdLinkModel> selectSpecificAd(long skuId) {
-        List<AliexpressAdLinkModel> result = new ArrayList<>();
+    public Set<AliexpressAdLinkModel> selectSpecificAd(long skuId) {
+        Set<AliexpressAdLinkModel> result = new HashSet<>();
         try {
             PreparedStatement statement = conn.prepareStatement(selectSpecificAdFromAliAdsLinkQuery);
             statement.setLong(1, skuId);
@@ -46,20 +46,9 @@ public class AliexpressAdLinksEntityRelationalModel implements AliexpressAdsLink
         return result;
     }
 
-    public ResultSet selectAllAdLinksInNormalOrder() {
+    public ResultSet selectAllAdLinks() {
         try {
-            PreparedStatement statement = conn.prepareStatement(selectAllSkusFromAliAdsInNormalOrderLinkQuery);
-            statement.setFetchSize(0);
-            return statement.executeQuery();
-        } catch (SQLException sqlException) {
-            logger.severe(sqlException.toString());
-        }
-        return null;
-    }
-
-    public ResultSet selectAllAdLinksInReverseOrder() {
-        try {
-            PreparedStatement statement = conn.prepareStatement(selectAllSkusFromAliAdsInReverseOrderLinkQuery);
+            PreparedStatement statement = conn.prepareStatement(selectAllSkusFromAliAdsLinkQuery);
             statement.setFetchSize(0);
             return statement.executeQuery();
         } catch (SQLException sqlException) {

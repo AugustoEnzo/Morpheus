@@ -1,13 +1,16 @@
 package com.fuse.sql.constants;
 
 public interface AliexpressAdsLinks {
+    int lastPageConstant = 100;
+    int adsLimitPerPage = 60;
+
     // xpath constants
     String cardListDivXPath = "//*[@id=\"card-list\"]";
     String lastPageAnchorXPath = "/html/body/div[6]/div[1]/div/div[2]/div[3]/ul/li[8]/a";
     String createTableAliAdsLinkQuery = """
             CREATE TABLE IF NOT EXISTS ali_ads_link (
               sku_id bigint PRIMARY KEY,
-              ad_link varchar(150) UNIQUE NOT NULL,
+              ad_link varchar(300) UNIQUE NOT NULL,
               collect_timestamp timestamp NOT NULL
             );
             """;
@@ -23,24 +26,13 @@ public interface AliexpressAdsLinks {
               sku_id = ?
             """;
 
-    String selectAllSkusFromAliAdsInNormalOrderLinkQuery = """
+    String selectAllSkusFromAliAdsLinkQuery = """
             SELECT
               sku_id,
               ad_link,
               collect_timestamp
             FROM
               ali_ads_link
-            """;
-
-    String selectAllSkusFromAliAdsInReverseOrderLinkQuery = """
-            SELECT
-              sku_id,
-              ad_link,
-              collect_timestamp
-            FROM
-              ali_ads_link
-            ORDER BY
-                sku_id DESC
             """;
 
     String deleteSpecificSkusFromAliAdsLinkQuery = """

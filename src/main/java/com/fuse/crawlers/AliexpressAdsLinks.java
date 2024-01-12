@@ -1,6 +1,6 @@
 package com.fuse.crawlers;
 
-import com.fuse.sql.erm.AliexpressAdLinksEntityRelationalModel;
+import com.fuse.sql.erm.AliexpressAdLinkEntityRelationalModel;
 import com.fuse.sql.helpers.CrawlerHelper;
 import com.fuse.sql.models.AliexpressAdLinkModel;
 import org.openqa.selenium.*;
@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class AliexpressAdsLinks implements com.fuse.sql.constants.AliexpressAdsLinks, Runnable {
@@ -21,7 +22,7 @@ public class AliexpressAdsLinks implements com.fuse.sql.constants.AliexpressAdsL
     public void run() {
         Logger logger = Logger.getLogger(AliexpressAdsLinks.class.getName());
 
-        AliexpressAdLinksEntityRelationalModel aliexpressAdLinksEntityRelationalModelEntityRelationModel = new AliexpressAdLinksEntityRelationalModel();
+        AliexpressAdLinkEntityRelationalModel aliexpressAdLinkEntityRelationalModelEntityRelationModel = new AliexpressAdLinkEntityRelationalModel();
 
         // Firefox options to use headless mode and avoid loading images
         FirefoxOptions options = new FirefoxOptions();
@@ -29,13 +30,9 @@ public class AliexpressAdsLinks implements com.fuse.sql.constants.AliexpressAdsL
 
         WebDriver driver = new FirefoxDriver(options);
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(3));
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 
-        // Arbitrary value for last page
-        int lastPage = 100;
-
-        // Actual limit of ads per page
-        int adsLimitPerPage = 60;
+        int actualLastPage = lastPageConstant;
 
         List<String> itemsToQuery = new ArrayList<>();
         itemsToQuery.add("PC Gaming");
@@ -51,10 +48,10 @@ public class AliexpressAdsLinks implements com.fuse.sql.constants.AliexpressAdsL
             String url = aliexpressURLBeginning + crawlerHelper.encodeUrl(aliexpressQueryParams + aliexpressURLEnding);
 
 
-            aliexpressAdLinksEntityRelationalModelEntityRelationModel.createAliAdsLinksTable();
+            aliexpressAdLinkEntityRelationalModelEntityRelationModel.createAliAdsLinksTable();
 
             boolean pageWasScrapped;
-            for (int pageIndex = 1; pageIndex <= lastPage; pageIndex++) {
+            for (int pageIndex = 1; pageIndex <= actualLastPage; pageIndex++) {
                 pageWasScrapped = false;
                 while (!pageWasScrapped) {
                     try {
@@ -70,7 +67,7 @@ public class AliexpressAdsLinks implements com.fuse.sql.constants.AliexpressAdsL
 
                         // For first page only get last page number
                         if (pageIndex == 1) {
-                            lastPage = Integer.parseInt(driver.findElement(By.xpath(lastPageAnchorXPath)).getText());
+                            actualLastPage = Integer.parseInt(driver.findElement(By.xpath(lastPageAnchorXPath)).getText());
                         }
 
                         for (int adIndex = 1; adIndex <= adsLimitPerPage; adIndex++) {
@@ -86,14 +83,14 @@ public class AliexpressAdsLinks implements com.fuse.sql.constants.AliexpressAdsL
                                 adLinkModel.collectTimestamp = java.sql.Timestamp.from(Instant.now());
 
                                 // Verify if the ad was already mapped
-                                List<AliexpressAdLinkModel> specificAdResult = aliexpressAdLinksEntityRelationalModelEntityRelationModel.selectSpecificAd(adLinkModel.skuId);
+                                Set<AliexpressAdLinkModel> specificAdResult = aliexpressAdLinkEntityRelationalModelEntityRelationModel.selectSpecificAd(adLinkModel.skuId);
 
                                 if (specificAdResult.isEmpty()) {
-                                    aliexpressAdLinksEntityRelationalModelEntityRelationModel.insertNewAd(adLinkModel);
+                                    aliexpressAdLinkEntityRelationalModelEntityRelationModel.insertNewAd(adLinkModel);
 
                                     // If product was already inserted into ali_ads_link, but the link is different update with newer link
-                                } else if (specificAdResult.getFirst().skuId != adLinkModel.skuId && !Objects.equals(specificAdResult.getFirst().link, adLinkModel.link)) {
-                                    aliexpressAdLinksEntityRelationalModelEntityRelationModel.updateSpecificSku(adLinkModel);
+                                } else if (specificAdResult.stream().findFirst().get().skuId != adLinkModel.skuId && !Objects.equals(specificAdResult.stream().findFirst().get().link, adLinkModel.link)) {
+                                    aliexpressAdLinkEntityRelationalModelEntityRelationModel.updateSpecificSku(adLinkModel);
                                 }
                             } catch (NoSuchElementException noSuchElementException) {
                                 logger.severe(noSuchElementException.toString());
@@ -106,6 +103,8 @@ public class AliexpressAdsLinks implements com.fuse.sql.constants.AliexpressAdsL
                 }
             }
         }
+        // Driver killer
+        driver.quit();
         logger.fine("Finished querying for the wanted ads");
     }
 }

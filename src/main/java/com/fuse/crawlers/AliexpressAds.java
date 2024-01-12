@@ -1,7 +1,7 @@
 package com.fuse.crawlers;
 
 import com.fuse.sql.erm.AliexpressAdEntityRelationalModel;
-import com.fuse.sql.erm.AliexpressAdLinksEntityRelationalModel;
+import com.fuse.sql.erm.AliexpressAdLinkEntityRelationalModel;
 import com.fuse.sql.models.AliexpressAdModel;
 import org.openqa.selenium.*;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -115,108 +115,105 @@ public class AliexpressAds implements com.fuse.sql.constants.AliexpressAds, Runn
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(3));
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));
 
-        AliexpressAdLinksEntityRelationalModel aliexpressAdLinksEntityRelationalModel = new AliexpressAdLinksEntityRelationalModel();
+        AliexpressAdLinkEntityRelationalModel aliexpressAdLinkEntityRelationalModel = new AliexpressAdLinkEntityRelationalModel();
 
-        try (ResultSet allAdsResultSet = aliexpressAdLinksEntityRelationalModel.selectAllAdLinksInNormalOrder()) {
-            try {
-                while (allAdsResultSet.next()) {
-                    AliexpressAdModel adModel = new AliexpressAdModel();
+        try (ResultSet allAdsResultSet = aliexpressAdLinkEntityRelationalModel.selectAllAdLinks()) {
+            while (allAdsResultSet.next()) {
+                AliexpressAdModel adModel = new AliexpressAdModel();
+                try {
+                    adModel.skuId = allAdsResultSet.getLong(1);
+                    adModel.link = allAdsResultSet.getString(2);
+                    adModel.collectTimestamp = Timestamp.from(Instant.now());
+
+                    logger.info("Querying product: " + adModel.skuId);
+
+                    driver.get(adModel.link);
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(titleCssSelector)));
+
+                    adModel.title = driver.findElement(By.cssSelector(titleCssSelector)).getText();
+
+                    adModel.oldPrice = parseMonetaryStrings(driver.findElement(By.cssSelector(oldPriceCssSelector)).getText());
+
+                    adModel.price = parseMonetaryStrings(driver.findElement(By.cssSelector(priceCssSelector)).getText());
+
+                    adModel.discountPercent = parsePercent(driver.findElement(
+                            By.cssSelector(discountPercentCssSelector)).getText());
+
                     try {
-                        adModel.skuId = allAdsResultSet.getLong(1);
-                        adModel.link = allAdsResultSet.getString(2);
-                        adModel.collectTimestamp = Timestamp.from(Instant.now());
+                        if (driver.findElement(By.cssSelector(valueInInstallmentsOrNationalProductCssSelector))
+                                .getText().contains("x")) {
+                            adModel.installmentsNumber = Integer.parseInt(driver.findElement(By.cssSelector(valueInInstallmentsOrNationalProductCssSelector))
+                                    .getText().split("x")[0]);
 
-                        logger.info("Querying product: " + adModel.skuId);
+                            adModel.installmentsValue = parseMonetaryStrings(driver.findElement(By.cssSelector(valueInInstallmentsOrNationalProductCssSelector))
+                                    .getText().split("x")[1]);
 
-                        driver.get(adModel.link);
-                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(titleCssSelector)));
-
-                        adModel.title = driver.findElement(By.cssSelector(titleCssSelector)).getText();
-
-                        adModel.oldPrice = parseMonetaryStrings(driver.findElement(By.cssSelector(oldPriceCssSelector)).getText());
-
-                        adModel.price = parseMonetaryStrings(driver.findElement(By.cssSelector(priceCssSelector)).getText());
-
-                        adModel.discountPercent = parsePercent(driver.findElement(
-                                By.cssSelector(discountPercentCssSelector)).getText());
-
-                        try {
-                            if (driver.findElement(By.cssSelector(valueInInstallmentsOrNationalProductCssSelector))
-                                    .getText().contains("x")) {
-                                adModel.installmentsNumber = Integer.parseInt(driver.findElement(By.cssSelector(valueInInstallmentsOrNationalProductCssSelector))
-                                        .getText().split("x")[0]);
-
-                                adModel.installmentsValue = parseMonetaryStrings(driver.findElement(By.cssSelector(valueInInstallmentsOrNationalProductCssSelector))
-                                        .getText().split("x")[1]);
-
-                                adModel.nationalProduct = false;
-                            } else {
-                                adModel.nationalProduct = true;
-                            }
-                        } catch (NoSuchElementException e) {
-                            logger.severe("Couldn't fetch instalments info");
+                            adModel.nationalProduct = false;
+                        } else {
+                            adModel.nationalProduct = true;
                         }
+                    } catch (NoSuchElementException e) {
+                        logger.severe("Couldn't fetch instalments info");
+                    }
 
-                        try {
-                            adModel.estimatedTaxValue = parseMonetaryStrings(driver.findElement(By.cssSelector(estimatedTaxCssSelector))
-                                    .getText());
-                        } catch (NoSuchElementException e) {
-                            logger.severe("Couldn't fetch estimated tax info");
-                        }
+                    try {
+                        adModel.estimatedTaxValue = parseMonetaryStrings(driver.findElement(By.cssSelector(estimatedTaxCssSelector))
+                                .getText());
+                    } catch (NoSuchElementException e) {
+                        logger.severe("Couldn't fetch estimated tax info");
+                    }
 
-                        try {
-                            adModel.quantitySold = parseQuantityString(driver.findElement(By.cssSelector(quantitySoldCssSelector))
-                                    .getText());
-                        } catch (NoSuchElementException e) {
-                            logger.severe("Couldn't fetch quantity sold info");
-                        }
+                    try {
+                        adModel.quantitySold = parseQuantityString(driver.findElement(By.cssSelector(quantitySoldCssSelector))
+                                .getText());
+                    } catch (NoSuchElementException e) {
+                        logger.severe("Couldn't fetch quantity sold info");
+                    }
 
-                        try {
-                            String shippingInfoString = driver.findElement(By.cssSelector(shippingCssSelector)).getText();
-                            if (shippingInfoString.matches("[0-9]")) {
-                                adModel.shippingCost = parseMonetaryStrings(driver.findElement(By.cssSelector(shippingCssSelector)).getText());
-                            }
-                        } catch (NoSuchElementException e) {
-                            logger.severe("Couldn't fetch shipping cost info");
+                    try {
+                        String shippingInfoString = driver.findElement(By.cssSelector(shippingCssSelector)).getText();
+                        if (shippingInfoString.matches("[0-9]")) {
+                            adModel.shippingCost = parseMonetaryStrings(driver.findElement(By.cssSelector(shippingCssSelector)).getText());
                         }
+                    } catch (NoSuchElementException e) {
+                        logger.severe("Couldn't fetch shipping cost info");
+                    }
+
+                    try {
+                        adModel.estimatedDeliveryInDays = parseEstimatedDeliveryDate(
+                                driver.findElement(By.cssSelector(estimatedDeliveryDateCssSelectorForNonChoiceProducts)).getText());
+                    } catch (NoSuchElementException e) {
+                        logger.severe("Couldn't fetch estimated delivery date info. Trying to get with choice css selector");
 
                         try {
                             adModel.estimatedDeliveryInDays = parseEstimatedDeliveryDate(
-                                    driver.findElement(By.cssSelector(estimatedDeliveryDateCssSelectorForNonChoiceProducts)).getText());
-                        } catch (NoSuchElementException e) {
-                            logger.severe("Couldn't fetch estimated delivery date info. Trying to get with choice css selector");
-
-                            try {
-                                adModel.estimatedDeliveryInDays = parseEstimatedDeliveryDate(
-                                        driver.findElement(By.cssSelector(estimatedDeliveryDateCssSelectorForChoiceProducts)).getText());
-                            } catch (NoSuchElementException ex) {
-                                logger.severe("Couldn't fetch any estimated delivery info");
-                            }
+                                    driver.findElement(By.cssSelector(estimatedDeliveryDateCssSelectorForChoiceProducts)).getText());
+                        } catch (NoSuchElementException ex) {
+                            logger.severe("Couldn't fetch any estimated delivery info");
                         }
-
-    //                    WebElement productsVariations = driver.findElement(By.cssSelector(productVariationsCssSelector));
-
-                        adModel.isChoice = verifyIfTheProductIsChoice(driver);
-
-                        List<AliexpressAdModel> specificAdResult = aliexpressAdEntityRelationalModel.selectSpecificAd(adModel.skuId);
-
-                        if (specificAdResult.isEmpty()) {
-                            aliexpressAdEntityRelationalModel.insertNewAd(adModel);
-                        } else {
-                            aliexpressAdLinksEntityRelationalModel.deleteSpecificAd(adModel.skuId);
-                        }
-
-                    } catch (WebDriverException webDriverException) {
-                        aliexpressAdLinksEntityRelationalModel.deleteSpecificAd(adModel.skuId);
-                        logger.severe(webDriverException.toString());
                     }
+
+//                    WebElement productsVariations = driver.findElement(By.cssSelector(productVariationsCssSelector));
+
+                    adModel.isChoice = verifyIfTheProductIsChoice(driver);
+
+                    List<AliexpressAdModel> specificAdResult = aliexpressAdEntityRelationalModel.selectSpecificAd(adModel.skuId);
+
+                    if (specificAdResult.isEmpty()) {
+                        aliexpressAdEntityRelationalModel.insertNewAd(adModel);
+                    } else {
+                        aliexpressAdLinkEntityRelationalModel.deleteSpecificAd(adModel.skuId);
+                    }
+                } catch (WebDriverException webDriverException) {
+                    aliexpressAdLinkEntityRelationalModel.deleteSpecificAd(adModel.skuId);
+                    logger.severe(webDriverException.toString());
                 }
-            } catch (SQLException sqlException) {
-                logger.severe(sqlException.toString());
             }
         } catch (SQLException e) {
             logger.severe(e.toString());
         }
+        // Driver kill
+        driver.quit();
         logger.fine("Finished ads crawling");
     }
 }
