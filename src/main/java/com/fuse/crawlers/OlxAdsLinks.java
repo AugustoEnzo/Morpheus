@@ -6,8 +6,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import com.fuse.sql.helpers.CrawlerHelper;
 
-import javax.print.Doc;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -19,6 +19,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class OlxAdsLinks implements com.fuse.sql.constants.OlxAdsLinks, Runnable {
+//public class OlxAdsLinks implements com.fuse.sql.constants.OlxAdsLinks {
+    static CrawlerHelper crawlerHelper = new CrawlerHelper();
     static OlxAdLinkEntityRelationalModel olxAdLinkEntityRelationalModel = new OlxAdLinkEntityRelationalModel();
     static Pattern skuIdPattern = Pattern.compile("[0-9]{4,25}$", Pattern.CASE_INSENSITIVE);
     public void run() {
@@ -30,21 +32,27 @@ public class OlxAdsLinks implements com.fuse.sql.constants.OlxAdsLinks, Runnable
         setOfCategories.add("tvs-e-video");
 
         for (String category : setOfCategories) {
-            olxAdLinkEntityRelationalModel.createOlxAdLinkTable();
-            boolean pageWasScrapped;
+            logger.info("Crawling OLX data for category: " + category);
+            olxAdLinkEntityRelationalModel.createTable();
             for (int page = 1; page < olxLastPage; page++) {
-                pageWasScrapped = false;
-                while (!pageWasScrapped) {
+                int pageScrappingTries = 0;
+                while (pageScrappingTries < 1) {
                     String olxUrl = String.format("%s%s%s", olxUrlBeginConstant, category, olxUrlEndConstant)
                             .replace("o=1", String.format("o=%s", page));
                     try {
                         Document pageDocument = Jsoup.connect(olxUrl)
-                                .data("query", "RANDOM")
+                                .data("query", "link")
                                 .userAgent("Mozilla")
                                 .timeout(3000)
                                 .get();
 
-                        Elements listOfAds = pageDocument.select(listOfAdsCssSelector);
+                        // Redundancy essential for crawler
+                        Elements listOfAds = crawlerHelper.tryToGetValuesUsingCssSelectorOrXpathJsoupBased(
+                                "list of ads",
+                                pageDocument,
+                                listOfAdsCssSelector,
+                                listOfAdsXPath
+                        );
 
                         for (Element adElement : listOfAds) {
                             OlxAdLinkModel adLinkModel = new OlxAdLinkModel();
@@ -71,7 +79,7 @@ public class OlxAdsLinks implements com.fuse.sql.constants.OlxAdsLinks, Runnable
                     } catch (IOException exception) {
                         logger.severe(exception.toString());
                     }
-                    pageWasScrapped = true;
+                    pageScrappingTries += 1;
                 }
             }
         }

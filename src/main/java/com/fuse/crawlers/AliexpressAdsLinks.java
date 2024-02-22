@@ -17,20 +17,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 
-public class AliexpressAdsLinks implements com.fuse.sql.constants.AliexpressAdsLinks, Runnable {
+//public class AliexpressAdsLinks implements com.fuse.sql.constants.AliexpressAdsLinks, Runnable {
+public class AliexpressAdsLinks implements com.fuse.sql.constants.AliexpressAdsLinks {
     private static final CrawlerHelper crawlerHelper = new CrawlerHelper();
-    public void run() {
+    public static void main(String[] args) {
         Logger logger = Logger.getLogger(AliexpressAdsLinks.class.getName());
 
         AliexpressAdLinkEntityRelationalModel aliexpressAdLinkEntityRelationalModelEntityRelationModel = new AliexpressAdLinkEntityRelationalModel();
-
-        // Firefox options to use headless mode and avoid loading images
-        FirefoxOptions options = new FirefoxOptions();
-        options.addArguments("--headless", "--disable-gpu", "--blink-settings=imagesEnabled=false");
-
-        WebDriver driver = new FirefoxDriver(options);
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(3));
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 
         int actualLastPage = lastPageConstant;
 
@@ -47,8 +40,11 @@ public class AliexpressAdsLinks implements com.fuse.sql.constants.AliexpressAdsL
 
             String url = aliexpressURLBeginning + crawlerHelper.encodeUrl(aliexpressQueryParams + aliexpressURLEnding);
 
-
             aliexpressAdLinkEntityRelationalModelEntityRelationModel.createAliAdsLinksTable();
+
+            WebDriver driver = new FirefoxDriver(crawlerHelper.firefoxOptions);
+            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(3));
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));
 
             boolean pageWasScrapped;
             for (int pageIndex = 1; pageIndex <= actualLastPage; pageIndex++) {
@@ -102,9 +98,9 @@ public class AliexpressAdsLinks implements com.fuse.sql.constants.AliexpressAdsL
                     }
                 }
             }
+            // Driver killer
+            driver.quit();
         }
-        // Driver killer
-        driver.quit();
         logger.fine("Finished querying for the wanted ads");
     }
 }

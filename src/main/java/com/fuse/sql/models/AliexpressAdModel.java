@@ -1,6 +1,7 @@
 package com.fuse.sql.models;
 
 import java.sql.Timestamp;
+import java.util.Map;
 
 public class AliexpressAdModel {
     public long skuId;
@@ -18,4 +19,9 @@ public class AliexpressAdModel {
     public Double shippingCost;
     public Boolean isChoice;
     public Long estimatedDeliveryInDays;
+    public Integer totalReviews;
+    public Double averageReview;
+    public Map<String, Object> productsVariations;
+    public Map<String, Object> reviewIndicators;
+    public Map<String, Object> specifications;
 }

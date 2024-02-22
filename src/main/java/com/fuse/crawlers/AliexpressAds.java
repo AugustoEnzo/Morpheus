@@ -2,10 +2,10 @@ package com.fuse.crawlers;
 
 import com.fuse.sql.erm.AliexpressAdEntityRelationalModel;
 import com.fuse.sql.erm.AliexpressAdLinkEntityRelationalModel;
+import com.fuse.sql.helpers.CrawlerHelper;
 import com.fuse.sql.models.AliexpressAdModel;
 import org.openqa.selenium.*;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -17,17 +17,23 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AliexpressAds implements com.fuse.sql.constants.AliexpressAds, Runnable {
-    static Logger logger = Logger.getLogger(AliexpressAds.class.getName());
-    static Pattern numericPattern = Pattern.compile("[0-9]", Pattern.CASE_INSENSITIVE);
-    static Pattern estimatedDatePattern = Pattern.compile("[0-9]{2} [a-zA-Z]{3}", Pattern.CASE_INSENSITIVE);
-    static Pattern percentPattern = Pattern.compile("[0-9]{1,3}", Pattern.CASE_INSENSITIVE);
-    static AliexpressAdEntityRelationalModel aliexpressAdEntityRelationalModel = new AliexpressAdEntityRelationalModel();
+// TODO Implements Runnable
+public class AliexpressAds implements com.fuse.sql.constants.AliexpressAds {
+    private static final Logger logger = Logger.getLogger(AliexpressAds.class.getName());
+    private static final Pattern numericPattern = Pattern.compile("[0-9]+", Pattern.CASE_INSENSITIVE);
+    private static final Pattern estimatedDatePattern = Pattern.compile("[0-9]{2} [a-zA-Z]{3}", Pattern.CASE_INSENSITIVE);
+    private static final Pattern percentPattern = Pattern.compile("[0-9]{1,3}", Pattern.CASE_INSENSITIVE);
+    private static final AliexpressAdEntityRelationalModel aliexpressAdEntityRelationalModel = new AliexpressAdEntityRelationalModel();
+    private static final AliexpressAdLinkEntityRelationalModel aliexpressAdLinkEntityRelationalModel = new AliexpressAdLinkEntityRelationalModel();
+    private static final CrawlerHelper crawlerHelper = new CrawlerHelper();
     private static Double parseMonetaryStrings(String monetaryString) {
         double result;
         Matcher matcher = numericPattern.matcher(monetaryString);
@@ -107,17 +113,52 @@ public class AliexpressAds implements com.fuse.sql.constants.AliexpressAds, Runn
             return false;
         }
     }
-    public void run() {
-        FirefoxOptions firefoxOptions = new FirefoxOptions();
-        firefoxOptions.addArguments("--headless", "--disable-gpu", "--blink-settings=imagesEnabled=false");
 
-        WebDriver driver = new FirefoxDriver(firefoxOptions);
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(3));
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));
+    private static String tryToGetWebElement(WebDriver driver, String identifier, boolean isCssSelector) {
+        WebElement element;
+        if (isCssSelector) {
+            element = driver.findElement(By.cssSelector(identifier));
+        } else {
+            element = driver.findElement(By.xpath(identifier));
+        }
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", element);
+        return element.getText();
+    }
 
-        AliexpressAdLinkEntityRelationalModel aliexpressAdLinkEntityRelationalModel = new AliexpressAdLinkEntityRelationalModel();
+    private static Map<String, Object> buildMapForProperties(String[] baseStringToBuildMap) {
+        System.out.println(Arrays.toString(baseStringToBuildMap));
+        Map<String, Object> tempMapForProperties = new HashMap<>();
+        for (int arrayIndex = 0; arrayIndex <= baseStringToBuildMap.length-1; arrayIndex++) {
+            tempMapForProperties.put(
+                    baseStringToBuildMap[arrayIndex].strip(),
+                    baseStringToBuildMap[arrayIndex+1]
+                            .replace(baseStringToBuildMap[arrayIndex], "")
+                            .replaceAll("[()]", "")
+                            .strip()
+                            .split("\n")
+            );
+
+            System.out.println(
+                    Arrays.toString(baseStringToBuildMap[arrayIndex + 1]
+                            .replace(baseStringToBuildMap[arrayIndex], "")
+                            .replaceAll("[()]", "")
+                            .strip()
+                            .split("\n"))
+            );
+        }
+        return tempMapForProperties;
+    }
+
+    public static void main(String[] args) {
+        aliexpressAdEntityRelationalModel.createAliAdsTable();
 
         try (ResultSet allAdsResultSet = aliexpressAdLinkEntityRelationalModel.selectAllAdLinks()) {
+//            WebDriver driver = new FirefoxDriver(crawlerHelper.firefoxOptions);
+            WebDriver driver = new FirefoxDriver();
+            driver.manage().window().maximize();
+            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(3));
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));
+
             while (allAdsResultSet.next()) {
                 AliexpressAdModel adModel = new AliexpressAdModel();
                 try {
@@ -130,23 +171,69 @@ public class AliexpressAds implements com.fuse.sql.constants.AliexpressAds, Runn
                     driver.get(adModel.link);
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(titleCssSelector)));
 
-                    adModel.title = driver.findElement(By.cssSelector(titleCssSelector)).getText();
+                    adModel.title = tryToGetWebElement(driver, titleCssSelector, true);
+                    System.out.println("title:" + adModel.title);
 
-                    adModel.oldPrice = parseMonetaryStrings(driver.findElement(By.cssSelector(oldPriceCssSelector)).getText());
+                    adModel.oldPrice = parseMonetaryStrings(tryToGetWebElement(driver, oldPriceCssSelector, true));
+                    System.out.println("oldPrice:" + adModel.oldPrice);
 
-                    adModel.price = parseMonetaryStrings(driver.findElement(By.cssSelector(priceCssSelector)).getText());
+                    adModel.price = parseMonetaryStrings(tryToGetWebElement(driver, priceCssSelector, true));
+                    System.out.println("price:" + adModel.price);
 
-                    adModel.discountPercent = parsePercent(driver.findElement(
-                            By.cssSelector(discountPercentCssSelector)).getText());
+                    adModel.discountPercent = parsePercent(tryToGetWebElement(driver, discountPercentCssSelector, true));
+                    System.out.println("discountPercent:" + adModel.discountPercent);
+
+                    try {
+                        adModel.estimatedTaxValue = parseMonetaryStrings(
+                                tryToGetWebElement(driver, estimatedTaxCssSelector, true));
+                        System.out.println("estimatedTaxValue: " + adModel.estimatedTaxValue);
+                    } catch (NoSuchElementException e) {
+                        logger.severe("Couldn't fetch estimated tax info");
+                    }
+
+                    try {
+                        adModel.quantitySold = parseQuantityString(
+                                tryToGetWebElement(driver, quantitySoldCssSelector, true));
+                        System.out.println("quantitySold: " + adModel.quantitySold);
+                    } catch (NoSuchElementException e) {
+                        logger.severe("Couldn't fetch quantity sold info");
+                    }
+
+                    try {
+                        String[] arrayOfProductsVariations = tryToGetWebElement(driver, productsVariationsChoiceCssSelector, true).split(":");
+                        adModel.productsVariations = buildMapForProperties(arrayOfProductsVariations);
+                        System.out.println("productsVariations" + adModel.productsVariations);
+                    } catch (NoSuchElementException e) {
+                        logger.severe("Couldn't fetch products variation info");
+                    }
+
+                    try {
+                        String shippingInfoString = tryToGetWebElement(driver, shippingCssSelector, true);
+                        if (shippingInfoString.matches("[0-9]+")) {
+                            adModel.shippingCost = parseMonetaryStrings(tryToGetWebElement(driver, shippingCssSelector, true));
+                        } else {
+                            adModel.shippingCost = 0.0;
+                        }
+                        System.out.println("shippingCost: " + adModel.shippingCost);
+                    } catch (NoSuchElementException e) {
+                        logger.severe("Couldn't fetch shipping cost info");
+                    }
+
+                    adModel.isChoice = verifyIfTheProductIsChoice(driver);
 
                     try {
                         if (driver.findElement(By.cssSelector(valueInInstallmentsOrNationalProductCssSelector))
                                 .getText().contains("x")) {
-                            adModel.installmentsNumber = Integer.parseInt(driver.findElement(By.cssSelector(valueInInstallmentsOrNationalProductCssSelector))
-                                    .getText().split("x")[0]);
+                            adModel.installmentsNumber = Integer.parseInt(
+                                    tryToGetWebElement(driver, valueInInstallmentsOrNationalProductCssSelector, true)
+                                            .split("x")[0]);
 
-                            adModel.installmentsValue = parseMonetaryStrings(driver.findElement(By.cssSelector(valueInInstallmentsOrNationalProductCssSelector))
-                                    .getText().split("x")[1]);
+                            adModel.installmentsValue = parseMonetaryStrings(
+                                    tryToGetWebElement(driver, valueInInstallmentsOrNationalProductCssSelector, true)
+                                            .split("x")[1]);
+
+                            System.out.println("installmentsValue: " + adModel.installmentsValue);
+                            System.out.println("installmentsNumber: " + adModel.installmentsNumber);
 
                             adModel.nationalProduct = false;
                         } else {
@@ -157,45 +244,63 @@ public class AliexpressAds implements com.fuse.sql.constants.AliexpressAds, Runn
                     }
 
                     try {
-                        adModel.estimatedTaxValue = parseMonetaryStrings(driver.findElement(By.cssSelector(estimatedTaxCssSelector))
-                                .getText());
-                    } catch (NoSuchElementException e) {
-                        logger.severe("Couldn't fetch estimated tax info");
-                    }
-
-                    try {
-                        adModel.quantitySold = parseQuantityString(driver.findElement(By.cssSelector(quantitySoldCssSelector))
-                                .getText());
-                    } catch (NoSuchElementException e) {
-                        logger.severe("Couldn't fetch quantity sold info");
-                    }
-
-                    try {
-                        String shippingInfoString = driver.findElement(By.cssSelector(shippingCssSelector)).getText();
-                        if (shippingInfoString.matches("[0-9]")) {
-                            adModel.shippingCost = parseMonetaryStrings(driver.findElement(By.cssSelector(shippingCssSelector)).getText());
-                        }
-                    } catch (NoSuchElementException e) {
-                        logger.severe("Couldn't fetch shipping cost info");
-                    }
-
-                    try {
                         adModel.estimatedDeliveryInDays = parseEstimatedDeliveryDate(
-                                driver.findElement(By.cssSelector(estimatedDeliveryDateCssSelectorForNonChoiceProducts)).getText());
+                                tryToGetWebElement(driver, estimatedDeliveryDateCssSelectorForNonChoiceProducts, true));
                     } catch (NoSuchElementException e) {
                         logger.severe("Couldn't fetch estimated delivery date info. Trying to get with choice css selector");
 
                         try {
                             adModel.estimatedDeliveryInDays = parseEstimatedDeliveryDate(
-                                    driver.findElement(By.cssSelector(estimatedDeliveryDateCssSelectorForChoiceProducts)).getText());
+                                    tryToGetWebElement(driver, estimatedDeliveryDateCssSelectorForChoiceProducts, true));
                         } catch (NoSuchElementException ex) {
                             logger.severe("Couldn't fetch any estimated delivery info");
                         }
                     }
+                    System.out.println("estimatedDeliveryInDays: " + adModel.estimatedDeliveryInDays);
 
-//                    WebElement productsVariations = driver.findElement(By.cssSelector(productVariationsCssSelector));
+                    // Above part
+                    ((JavascriptExecutor) driver).executeScript("window.scrollBy(0, 500)");
+                    // Below part
 
-                    adModel.isChoice = verifyIfTheProductIsChoice(driver);
+                    WebElement preSpecificationsDivWebElement = driver.findElement(By.cssSelector(preSpecificationsDivCssSelector));
+                    ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", preSpecificationsDivWebElement);
+
+                    WebElement specificationsDivWebElement = driver.findElement(By.cssSelector(specificationsCssSelector));
+                    ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", specificationsDivWebElement);
+
+                    try {
+                        String[] arrayOfSpecifications = tryToGetWebElement(driver, specificationsCssSelector, true).split("\n");
+                        adModel.specifications = buildMapForProperties(arrayOfSpecifications);
+                        System.out.println("specifications: " + adModel.specifications);
+                    } catch (NoSuchElementException e) {
+                        logger.severe("Couldn't fetch specifications info");
+                    }
+
+                    try {
+                        Matcher totalReviewsMatcher = numericPattern.matcher(
+                                tryToGetWebElement(driver, totalReviewsMainCssSelector, true));
+                        if (totalReviewsMatcher.find()) {
+                            adModel.totalReviews = Integer.parseInt(totalReviewsMatcher.group(0));
+                        }
+                    } catch (NoSuchElementException e) {
+                        logger.severe("Couldn't fetch total reviews info");
+                    }
+                    System.out.println("totalReviews: " + adModel.totalReviews);
+
+                    try {
+                        adModel.averageReview = Double.parseDouble(tryToGetWebElement(driver, averageReviewCssSelector, true));
+                        System.out.println("averageReview: " + adModel.averageReview);
+                    } catch (NoSuchElementException e) {
+                        logger.severe("Couldn't fetch average review info");
+                    }
+
+                    try {
+                        String[] arrayOfReviewIndicators = tryToGetWebElement(driver, reviewIndicatorsCssSelector, true).split("\n");
+                        adModel.reviewIndicators = buildMapForProperties(arrayOfReviewIndicators);
+                        System.out.println("reviewIndicators: " + adModel.reviewIndicators);
+                    } catch (NoSuchElementException e) {
+                        logger.severe("Couldn't fetch review indicators info");
+                    }
 
                     List<AliexpressAdModel> specificAdResult = aliexpressAdEntityRelationalModel.selectSpecificAd(adModel.skuId);
 
@@ -209,11 +314,11 @@ public class AliexpressAds implements com.fuse.sql.constants.AliexpressAds, Runn
                     logger.severe(webDriverException.toString());
                 }
             }
+            // Driver kill
+            driver.quit();
         } catch (SQLException e) {
             logger.severe(e.toString());
         }
-        // Driver kill
-        driver.quit();
         logger.fine("Finished ads crawling");
     }
 }

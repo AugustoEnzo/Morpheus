@@ -5,7 +5,8 @@ public interface OlxAdsLinks {
     String olxUrlEndConstant = "/estado-am?o=1";
     int olxLastPage = 100;
 
-    String listOfAdsCssSelector = ".sc-e859a9d3-2";
+    String listOfAdsCssSelector = ".sc-74d68375-2";
+    String listOfAdsXPath = "/html/body/div/div/main/div/div[2]/main/div[4]";
     String createTableOlxAdsLinks = """
             CREATE TABLE IF NOT EXISTS olx_ads_link (
               sku_id bigint PRIMARY KEY,
@@ -39,7 +40,7 @@ public interface OlxAdsLinks {
             """;
 
     String insertSkuIntoOlxAdsLinkQuery = """
-            INSERT INTO olx_ads_link (sku_id, ad_link, collect_timestamp) VALUES (?,?,?);
+            INSERT INTO olx_ads_link VALUES (?,?,?);
             """;
 
     String updateSpecificSkuIntoOlxAdsLinkQuery = """

@@ -1,12 +1,8 @@
 package com.fuse.sql.constants;
 
 public interface AliexpressAds {
-    // xpath constants
-    // Click on after
-    String specificationsSeeMoreButtonCssSelector = "button.comet-v2-btn:nth-child(3)";
     String titleCssSelector = ".title--wrap--Ms9Zv4A > h1:nth-child(1)";
     String oldPriceCssSelector = ".price--originalText--Zsc6sMv";
-    String productVariationsCssSelector = ".sku-item--skus--MmsF8fD";
     String priceCssSelector = ".price--current--H7sGzqb";
     String discountPercentCssSelector = ".price--discount--xET8qnP";
     String estimatedTaxCssSelector = "a.vat-installment--item--XEHEcM1";
@@ -16,7 +12,13 @@ public interface AliexpressAds {
     String choiceBannerCssSelector = ".banner-choice--wrap--eH19LKI";
     String estimatedDeliveryDateCssSelectorForNonChoiceProducts = "div.dynamic-shipping-line:nth-child(3) > span:nth-child(1) > span:nth-child(2)";
     String estimatedDeliveryDateCssSelectorForChoiceProducts = "div.dynamic-shipping-line:nth-child(2) > span:nth-child(1) > span:nth-child(2) > strong:nth-child(1)";
-
+    String preSpecificationsDivCssSelector = "#nav-description > div:nth-child(2)";
+    String specificationsDivCssSelector = "#nav-specification";
+    String totalReviewsMainCssSelector = "#nav-review > div:nth-child(1) > div:nth-child(1) > h1:nth-child(1)";
+    String averageReviewCssSelector = ".ae-header-content-num";
+    String reviewIndicatorsCssSelector = ".ae-filter-tab-list";
+    String specificationsCssSelector = ".specification--list--fiWsSyv";
+    String productsVariationsChoiceCssSelector = ".sku-item--property--Wk6aoYj";
     String createTableAliAdsQuery = """
             CREATE TABLE IF NOT EXISTS ali_ads (
               sku_id bigint PRIMARY KEY,

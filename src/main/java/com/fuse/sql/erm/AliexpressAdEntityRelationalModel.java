@@ -16,7 +16,9 @@ public class AliexpressAdEntityRelationalModel implements AliexpressAds {
 
     public void createAliAdsTable() {
         try {
-            Statement statement = conn.createStatement() ;
+            PreparedStatement statement = conn.prepareStatement(createTableAliAdsQuery);
+            statement.executeQuery();
+            logger.fine(AliexpressAdEntityRelationalModel.class.getName() + "");
         } catch (SQLException sqlException) {
             logger.severe(sqlException.toString());
         }
@@ -139,14 +141,12 @@ public class AliexpressAdEntityRelationalModel implements AliexpressAds {
                 aliexpressAdModel.title = resultSet.getString(4);
 
                 try {
-                    resultSet.getDouble(5);
                     aliexpressAdModel.oldPrice = resultSet.getDouble(5);
                 } catch (PSQLException psqlException) {
                     aliexpressAdModel.oldPrice = null;
                 }
 
                 try {
-                    resultSet.getDouble(6);
                     aliexpressAdModel.price = resultSet.getDouble(6);
                 } catch (PSQLException psqlException) {
                     aliexpressAdModel.price = null;

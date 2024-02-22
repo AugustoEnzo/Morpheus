@@ -13,7 +13,7 @@ public class OlxAdLinkEntityRelationalModel implements OlxAdsLinks {
     Logger logger = Logger.getLogger(OlxAdLinkEntityRelationalModel.class.getName());
     Connection conn = new PostgresJDBCDriverConnector().conn;
 
-    public void createOlxAdLinkTable() {
+    public void createTable() {
         try {
             Statement statement = conn.createStatement();
             statement.execute(createTableOlxAdsLinks);
@@ -64,9 +64,9 @@ public class OlxAdLinkEntityRelationalModel implements OlxAdsLinks {
             int result = statement.executeUpdate();
 
             if (result == 1) {
-                logger.info(skuId + "was successfully deleted from olx_ads_links");
+                logger.info(skuId + " was successfully deleted from olx_ads_links");
             } else {
-                logger.info(skuId + "wasn't deleted from olx_ads_links");
+                logger.info(skuId + " wasn't deleted from olx_ads_links");
             }
 
             statement.close();

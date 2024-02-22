@@ -17,7 +17,7 @@ public class AliexpressAdLinkEntityRelationalModel implements AliexpressAdsLinks
         try {
             Statement statement = conn.createStatement();
             statement.execute(createTableAliAdsLinkQuery);
-
+            logger.fine(AliexpressAdLinkEntityRelationalModel.class.getName() + " could create the topics without more problems");
         } catch (SQLException sqlException) {
             logger.severe(sqlException.toString());
         }
