@@ -1,0 +1,10 @@
+# Put this file at /etc/systemd/system with 644 permissions
+[Unit]
+Description=Morpheus from FUSE LTDA software service
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /DATA/Projetos/Morpheus/server-execution-script.sh
+
+[Install]
+WantedBy=multi-user.target
