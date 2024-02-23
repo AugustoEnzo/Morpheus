@@ -2,7 +2,7 @@ package com.fuse.crawlers;
 
 import com.fuse.sql.erm.AliexpressAdEntityRelationalModel;
 import com.fuse.sql.erm.AliexpressAdLinkEntityRelationalModel;
-import com.fuse.sql.helpers.CrawlerHelper;
+import com.fuse.helpers.CrawlerHelper;
 import com.fuse.sql.models.AliexpressAdModel;
 import org.openqa.selenium.*;
 import org.openqa.selenium.firefox.FirefoxDriver;

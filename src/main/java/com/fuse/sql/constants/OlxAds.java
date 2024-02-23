@@ -4,15 +4,10 @@ public interface OlxAds {
     String adJsonTypeValue = "application/ld+json";
     String sellerMainCssSelector = ".ad__sc-ypp2u2-4";
     String sellerSecondaryCssSelector = ".sc-fBuWsC";
-    String categoryMainCssSelector = "div.ad__sc-2h9gkk-0:nth-child(1) > div:nth-child(1) > a:nth-child(2)";
     String locationMainCssSelector = "#location > div:nth-child(1)";
     String locationSecondaryCssSelector = ".ckFhRN > div:nth-child(1)";
     String detailsMainCssSelector = "#details > div:nth-child(1)";
     String detailsSecondaryCssSelector = "div.ad__sc-h3us20-6:nth-child(29) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1)";
-    String getInOlxSinceMainCssSelector = "div.ad__sc-k5plwo-2:nth-child(1) > div:nth-child(1) > span:nth-child(2)";
-    String inOlxSinceSecondaryCssSelector = ".sc-gNJABI";
-    String publicationDateMainCssSelector = ".ad__sc-1rv3ob5-0";
-    String publicationDateSecondaryCssSelector = "div.ad__sc-h3us20-6:nth-child(33) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > span:nth-child(1)";
     String imagesArraySQLType = "TEXT";
     int crawlingTimeout = 3;
     String createTableOlxAdsQuery = """
@@ -55,7 +50,7 @@ public interface OlxAds {
             FROM
               olx_ads
             WHERE
-              sku_id = ?
+              sku_id = ?;
             """;
 
     String selectAllAdsFromOlxAdsQuery = """
