@@ -6,12 +6,12 @@
 
     <groupId>com.fuse</groupId>
     <artifactId>Morpheus</artifactId>
-    <version>1.1-EARLY-ACCESS</version>
-
+    <version>1.2-EARLY-ACCESS</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <exec.mainClass>com.fuse.scheduler.Scheduler</exec.mainClass>
-        <maven.compiler.release>21</maven.compiler.release>
+        <exec.mainClass>com.fuse.executor.ExecutorService</exec.mainClass>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
     <dependencies>
         <!-- https://mvnrepository.com/artifact/org.jsoup/jsoup -->
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.1</version>
+            <version>42.7.2</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.json/json -->
         <dependency>
