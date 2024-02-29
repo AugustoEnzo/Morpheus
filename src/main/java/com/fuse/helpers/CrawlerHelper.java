@@ -1,7 +1,9 @@
-package com.fuse.sql.helpers;
+package com.fuse.helpers;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 
 import java.net.URLEncoder;
@@ -23,8 +25,7 @@ public class CrawlerHelper {
         }
         return elements;
     };
-    public FirefoxOptions firefoxOptions = new FirefoxOptions()
+    public final FirefoxOptions firefoxOptions = new FirefoxOptions()
             .addArguments("--headless", "--disable-gpu", "--reduce-security-for-testing", "--disable-web-security",
                     "--ignore-certificate-errors", "--blink-settings=imagesEnabled=false");
-
 }

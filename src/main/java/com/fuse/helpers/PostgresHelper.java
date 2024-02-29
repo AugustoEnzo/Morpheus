@@ -1,4 +1,4 @@
-package com.fuse.sql.helpers;
+package com.fuse.helpers;
 
 import java.sql.SQLException;
 import java.util.logging.Logger;

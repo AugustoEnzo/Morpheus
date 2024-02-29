@@ -6,7 +6,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import com.fuse.sql.helpers.CrawlerHelper;
+import com.fuse.helpers.CrawlerHelper;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -19,7 +19,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class OlxAdsLinks implements com.fuse.sql.constants.OlxAdsLinks, Runnable {
-//public class OlxAdsLinks implements com.fuse.sql.constants.OlxAdsLinks {
     static CrawlerHelper crawlerHelper = new CrawlerHelper();
     static OlxAdLinkEntityRelationalModel olxAdLinkEntityRelationalModel = new OlxAdLinkEntityRelationalModel();
     static Pattern skuIdPattern = Pattern.compile("[0-9]{4,25}$", Pattern.CASE_INSENSITIVE);

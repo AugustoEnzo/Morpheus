@@ -2,19 +2,18 @@ package com.fuse.crawlers;
 
 import com.fuse.sql.erm.OlxAdEntityRelationalModel;
 import com.fuse.sql.erm.OlxAdLinkEntityRelationalModel;
-import com.fuse.sql.helpers.CrawlerHelper;
+import com.fuse.helpers.CrawlerHelper;
 import com.fuse.sql.models.OlxAdModel;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.openqa.selenium.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.support.ui.ExpectedCondition;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.postgresql.util.PGobject;
 
 import java.io.IOException;
@@ -24,17 +23,15 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 public class OlxAds implements com.fuse.sql.constants.OlxAds, Runnable {
-    private static final Pattern cepPattern = Pattern.compile("[0-9]+", Pattern.CASE_INSENSITIVE);
     private static final OlxAdLinkEntityRelationalModel olxAdLinkEntityRelationalModel = new OlxAdLinkEntityRelationalModel();
     private static final CrawlerHelper crawlerHelper = new CrawlerHelper();
     private static final OlxAdEntityRelationalModel olxAdEntityRelationalModel = new OlxAdEntityRelationalModel();
+    public static final WebDriver driver = new FirefoxDriver(crawlerHelper.firefoxOptions);
     private static JSONObject getDetailsJSON(String details) {
         JSONObject detailsJSON = new JSONObject();
         String[] detailsList = details.split("\n");
@@ -48,12 +45,11 @@ public class OlxAds implements com.fuse.sql.constants.OlxAds, Runnable {
         return detailsJSON;
     }
     public void run() {
-        Logger logger = Logger.getLogger(OlxAdLinkEntityRelationalModel.class.getName());
+        Logger logger = Logger.getLogger(OlxAds.class.getName());
         olxAdEntityRelationalModel.createTable();
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(crawlingTimeout));
 
         try (ResultSet allAdsResultSet = olxAdLinkEntityRelationalModel.selectAllAdLinks()) {
-            WebDriver driver = new FirefoxDriver(crawlerHelper.firefoxOptions);
-            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(crawlingTimeout));
             while (allAdsResultSet.next()) {
                 boolean compatibleSiteVersion = true;
 

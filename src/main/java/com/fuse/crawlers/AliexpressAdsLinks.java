@@ -1,11 +1,10 @@
 package com.fuse.crawlers;
 
 import com.fuse.sql.erm.AliexpressAdLinkEntityRelationalModel;
-import com.fuse.sql.helpers.CrawlerHelper;
+import com.fuse.helpers.CrawlerHelper;
 import com.fuse.sql.models.AliexpressAdLinkModel;
 import org.openqa.selenium.*;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
