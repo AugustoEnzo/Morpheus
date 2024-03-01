@@ -2,6 +2,7 @@ package com.fuse.sql.constants;
 
 public interface OlxAds {
     String adJsonTypeValue = "application/ld+json";
+    String adJsonCssSelector = String.format("head > script[type='%s']", adJsonTypeValue);
     String sellerMainCssSelector = ".ad__sc-ypp2u2-4";
     String sellerSecondaryCssSelector = ".sc-fBuWsC";
     String locationMainCssSelector = "#location > div:nth-child(1)";
