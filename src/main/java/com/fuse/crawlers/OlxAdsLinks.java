@@ -7,6 +7,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import com.fuse.helpers.CrawlerHelper;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.firefox.FirefoxDriver;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -19,31 +22,30 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class OlxAdsLinks implements com.fuse.sql.constants.OlxAdsLinks, Runnable {
-    static CrawlerHelper crawlerHelper = new CrawlerHelper();
-    static OlxAdLinkEntityRelationalModel olxAdLinkEntityRelationalModel = new OlxAdLinkEntityRelationalModel();
-    static Pattern skuIdPattern = Pattern.compile("[0-9]{4,25}$", Pattern.CASE_INSENSITIVE);
+    private static final Logger logger = Logger.getLogger(OlxAdsLinks.class.getName());
+    private static final CrawlerHelper crawlerHelper = new CrawlerHelper();
+    private static final OlxAdLinkEntityRelationalModel olxAdLinkEntityRelationalModel = new OlxAdLinkEntityRelationalModel();
+    private static final Pattern skuIdPattern = Pattern.compile("[0-9]{4,25}$", Pattern.CASE_INSENSITIVE);
+    private static final WebDriver driver = new FirefoxDriver(crawlerHelper.firefoxOptions);
     public void run() {
-        Logger logger = Logger.getLogger(OlxAdsLinks.class.getName());
-
         Set<String> setOfCategories = new HashSet<>();
         setOfCategories.add("eletronicos-e-celulares");
         setOfCategories.add("informatica");
         setOfCategories.add("tvs-e-video");
 
+        olxAdLinkEntityRelationalModel.createTable();
+
         for (String category : setOfCategories) {
             logger.info("Crawling OLX data for category: " + category);
-            olxAdLinkEntityRelationalModel.createTable();
+            driver.manage().deleteAllCookies();
             for (int page = 1; page < olxLastPage; page++) {
                 int pageScrappingTries = 0;
                 while (pageScrappingTries < 1) {
                     String olxUrl = String.format("%s%s%s", olxUrlBeginConstant, category, olxUrlEndConstant)
                             .replace("o=1", String.format("o=%s", page));
                     try {
-                        Document pageDocument = Jsoup.connect(olxUrl)
-                                .data("query", "link")
-                                .userAgent("Mozilla")
-                                .timeout(3000)
-                                .get();
+                        driver.get(olxUrl);
+                        Document pageDocument = Jsoup.parse(driver.getPageSource());
 
                         // Redundancy essential for crawler
                         Elements listOfAds = crawlerHelper.tryToGetValuesUsingCssSelectorOrXpathJsoupBased(
@@ -75,8 +77,8 @@ public class OlxAdsLinks implements com.fuse.sql.constants.OlxAdsLinks, Runnable
                                 olxAdLinkEntityRelationalModel.updateSpecificSku(adLinkModel);
                             }
                         }
-                    } catch (IOException exception) {
-                        logger.severe(exception.toString());
+                    } catch (WebDriverException webDriverException) {
+                        logger.severe(webDriverException.toString());
                     }
                     pageScrappingTries += 1;
                 }
