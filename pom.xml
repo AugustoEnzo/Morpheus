@@ -9,7 +9,7 @@
     <version>1.2-EARLY-ACCESS</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <exec.mainClass>com.fuse.executor.ExecutorService</exec.mainClass>
+        <exec.mainClass>com.fuse.executor.Executor</exec.mainClass>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
     </properties>

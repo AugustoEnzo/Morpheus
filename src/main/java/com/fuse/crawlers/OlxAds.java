@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 public class OlxAds implements com.fuse.sql.constants.OlxAds, Runnable {
+//public class OlxAds implements com.fuse.sql.constants.OlxAds {
+    private static final Logger logger = Logger.getLogger(OlxAds.class.getName());
     private static final OlxAdLinkEntityRelationalModel olxAdLinkEntityRelationalModel = new OlxAdLinkEntityRelationalModel();
     private static final CrawlerHelper crawlerHelper = new CrawlerHelper();
     private static final OlxAdEntityRelationalModel olxAdEntityRelationalModel = new OlxAdEntityRelationalModel();
@@ -41,12 +43,13 @@ public class OlxAds implements com.fuse.sql.constants.OlxAds, Runnable {
         return detailsJSON;
     }
     public void run() {
-        Logger logger = Logger.getLogger(OlxAds.class.getName());
+//    public static void  main(String[] args) {
         olxAdEntityRelationalModel.createTable();
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(crawlingTimeout));
 
         try (ResultSet allAdsResultSet = olxAdLinkEntityRelationalModel.selectAllAdLinks()) {
             while (allAdsResultSet.next()) {
+                driver.manage().deleteAllCookies();
                 boolean compatibleSiteVersion = true;
 
                 OlxAdModel olxAdModel = new OlxAdModel();
@@ -133,7 +136,6 @@ public class OlxAds implements com.fuse.sql.constants.OlxAds, Runnable {
                         }
 
                         if (!compatibleSiteVersion) {
-                            driver.manage().deleteAllCookies();
                             logger.severe("Incompatible portal, ignoring the ad, for now!");
                         } else {
                             String details;

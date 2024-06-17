@@ -6,7 +6,7 @@ Description=Morpheus from FUSE LTDA software service
 Type=simple
 ExecStart=/bin/bash /DATA/Projetos/Morpheus/server-execution-script.sh
 Restart=always
-RuntimeMaxSec=1h5m
+RuntimeMaxSec=2h5m
 
 [Install]
 WantedBy=multi-user.target

@@ -1,7 +1,7 @@
 package com.fuse.sql.constants;
 
 public interface HistoricalOfOlxAds {
-    int crawlingTimeout = 3000;
+    int crawlingTimeout = 3;
     String createTableHistoricalOlxAdsQuery = """
             CREATE TABLE IF NOT EXISTS historical_of_olx_ads (
                 id serial PRIMARY KEY,
@@ -51,6 +51,6 @@ public interface HistoricalOfOlxAds {
             """;
 
     String insertChangeIntoHistoricalOlxAdsQuery = """
-            INSERT INTO historical_of_olx_ads VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+            INSERT INTO historical_of_olx_ads VALUES (?, ?, ?, ?, ?, ?, ?);
             """;
 }

@@ -2,6 +2,8 @@ package com.fuse.sql.erm;
 
 import com.fuse.sql.connection.PostgresJDBCDriverConnector;
 import com.fuse.sql.constants.HistoricalOfOlxAds;
+import org.postgresql.util.PGobject;
+import org.postgresql.util.PSQLException;
 
 import java.sql.*;
 import java.util.HashSet;
@@ -64,12 +66,67 @@ public class HistoricalOfOlxAdsEntityRelationalModel implements HistoricalOfOlxA
                 historicalOfOlxAdsModel.skuId = resultSet.getLong(2);
                 historicalOfOlxAdsModel.link = resultSet.getString(3);
                 historicalOfOlxAdsModel.collectTimestamp = resultSet.getTimestamp(4);
+                try {
+                    historicalOfOlxAdsModel.newPrice = resultSet.getDouble(5);
+                } catch (PSQLException psqlException) {
+                    historicalOfOlxAdsModel.newPrice = null;
+                }
+                try {
+                    historicalOfOlxAdsModel.newJson = resultSet.getObject(6, PGobject.class);
+                } catch (PSQLException psqlException) {
+                    historicalOfOlxAdsModel.newJson = null;
+                }
+                try {
+                    historicalOfOlxAdsModel.newImagesArray = resultSet.getArray(7);
+                } catch (PSQLException psqlException) {
+                    historicalOfOlxAdsModel.newImagesArray = null;
+                }
+                try {
+                    historicalOfOlxAdsModel.offline = resultSet.getBoolean(8);
+                } catch (PSQLException psqlException) {
+                    historicalOfOlxAdsModel.offline = null;
+                }
+
+                result.add(historicalOfOlxAdsModel);
             }
         } catch (SQLException sqlException) {
             logger.severe(sqlException.toString());
         }
         return result;
     }
+
+    public void insertNewAd(com.fuse.sql.models.HistoricalOfOlxAds historicalOfOlxAds) {
+        try {
+            PreparedStatement statement = conn.prepareStatement(insertChangeIntoHistoricalOlxAdsQuery);
+            statement.setLong(1, historicalOfOlxAds.skuId);
+            statement.setString(2, historicalOfOlxAds.link);
+            statement.setTimestamp(3, historicalOfOlxAds.collectTimestamp);
+
+            if (historicalOfOlxAds.newPrice != null) {
+                statement.setDouble(4, historicalOfOlxAds.newPrice);
+            } else {
+                statement.setNull(6, Types.DOUBLE);
+            }
+
+            if (historicalOfOlxAds.newJson != null) {
+                statement.setObject(7, historicalOfOlxAds.newJson);
+            } else {
+                statement.setNull(7, Types.JAVA_OBJECT);
+            }
+
+            if (historicalOfOlxAds.newImagesArray != null) {
+                statement.setArray(8, historicalOfOlxAds.newImagesArray);
+            } else {
+                statement.setNull(8, Types.ARRAY);
+            }
+
+            if (historicalOfOlxAds.offline != null) {
+                statement.setBoolean(9, historicalOfOlxAds.offline);
+            } else {
+                statement.setNull(9, Types.BOOLEAN);
+            }
+        } catch (SQLException sqlException) {
+            logger.severe(sqlException.toString());
+        }
+    }
 }
-
-

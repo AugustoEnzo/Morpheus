@@ -4,8 +4,8 @@ public interface OlxAdsLinks {
     String olxUrlBeginConstant = "https://www.olx.com.br/";
     String olxUrlEndConstant = "/estado-am?o=1";
     int olxLastPage = 100;
-
-    String listOfAdsCssSelector = ".sc-74d68375-2";
+    int crawlingTimeout = 3;
+    String listOfAdsCssSelector = ".sc-8be2c8c5-2";
     String listOfAdsXPath = "/html/body/div/div/main/div/div[2]/main/div[4]";
     String createTableOlxAdsLinks = """
             CREATE TABLE IF NOT EXISTS olx_ads_link (

@@ -11,6 +11,6 @@ public class HistoricalOfOlxAds {
     public Timestamp collectTimestamp;
     public Double newPrice;
     public PGobject newJson;
-    public Array newArray;
+    public Array newImagesArray;
     public Boolean offline;
 }

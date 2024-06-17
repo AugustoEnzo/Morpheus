@@ -11,6 +11,7 @@ public interface OlxAds {
     String detailsSecondaryCssSelector = "div.ad__sc-h3us20-6:nth-child(29) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1)";
     String imagesArraySQLType = "TEXT";
     int crawlingTimeout = 3;
+    int adLookupTimeoutInMilliseconds = 5000;
     String createTableOlxAdsQuery = """
             CREATE TABLE IF NOT EXISTS olx_ads (
               sku_id bigint PRIMARY KEY,
