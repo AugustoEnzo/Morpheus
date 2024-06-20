@@ -205,11 +205,10 @@ public class OlxAdEntityRelationalModel implements OlxAds {
             if (olxAdModel.details != null) {
                 statement.setObject(15, olxAdModel.details);
             } else {
-                statement.setNull(15, Types.JAVA_OBJECT);
+                statement.setNull(15, Types.STRUCT);
             }
 
             int result = statement.executeUpdate();
-            System.out.println(result);
 
             if (result > 0) {
                 logger.info(String.format("Sku: %d was successfully inserted at olx_ads table", olxAdModel.skuId));

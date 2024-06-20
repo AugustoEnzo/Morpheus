@@ -30,6 +30,7 @@ public class OlxAds implements com.fuse.sql.constants.OlxAds, Runnable {
     private static final CrawlerHelper crawlerHelper = new CrawlerHelper();
     private static final OlxAdEntityRelationalModel olxAdEntityRelationalModel = new OlxAdEntityRelationalModel();
     public static final WebDriver driver = new FirefoxDriver(crawlerHelper.firefoxOptions);
+//    public static final WebDriver driver = new FirefoxDriver();
     private static JSONObject getDetailsJSON(String details) {
         JSONObject detailsJSON = new JSONObject();
         String[] detailsList = details.split("\n");
@@ -71,12 +72,12 @@ public class OlxAds implements com.fuse.sql.constants.OlxAds, Runnable {
                                     .replace("\"@type\":\"Offer\",", ""));
                         }
 
-                        JSONObject javaJsonObject = new JSONObject(Objects.requireNonNull(olxAdModel.json.getValue()));
-                        olxAdModel.title = javaJsonObject.getString("name");
-                        olxAdModel.description = javaJsonObject.getString("description");
+                        JSONObject jsonObject = new JSONObject(Objects.requireNonNull(olxAdModel.json.getValue()));
+                        olxAdModel.title = jsonObject.getString("name");
+                        olxAdModel.description = jsonObject.getString("description");
 
                         try {
-                            olxAdModel.price = Double.parseDouble(javaJsonObject
+                            olxAdModel.price = Double.parseDouble(jsonObject
                                     .getJSONObject("offers")
                                     .getString("price")
                                     .replace(",", "."));
@@ -85,14 +86,18 @@ public class OlxAds implements com.fuse.sql.constants.OlxAds, Runnable {
                         }
 
                         ArrayList<Object> imagesArray = new ArrayList<>();
-                        for (Object imageObject : javaJsonObject.getJSONArray("image")) {
+                        for (Object imageObject : jsonObject.getJSONArray("image")) {
                             JSONObject jsonImageObject = new JSONObject(imageObject.toString());
                             imagesArray.add(jsonImageObject.getString("contentUrl"));
                         }
 
                         olxAdModel.images = olxAdEntityRelationalModel.createArrayOf(imagesArray, imagesArraySQLType);
                         olxAdModel.category = olxAdModel.link.split("/")[4];
-                        olxAdModel.subcategory = olxAdModel.link.split("/")[5];
+                        try {
+                            olxAdModel.subcategory = olxAdModel.link.split("/")[5];
+                        } catch (ArrayIndexOutOfBoundsException e) {
+                            logger.severe("Couldn't fetch subcategory info");
+                        }
 
                         // Selenium driver
                         driver.get(olxAdModel.link);
