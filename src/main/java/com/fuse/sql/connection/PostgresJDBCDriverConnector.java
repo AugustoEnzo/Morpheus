@@ -2,19 +2,21 @@ package com.fuse.sql.connection;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-public class PostgresJDBCDriverConnector {
+public class PostgresJDBCDriverConnector implements com.fuse.sql.constants.Database {
     Logger logger = Logger.getLogger(PostgresJDBCDriverConnector.class.getName());
     public Connection conn;
     public PostgresJDBCDriverConnector() {
-        String url = "jdbc:postgresql://192.168.3.20:5432/morpheus";
+        String url = String.format("jdbc:postgresql://%s:%s/%s", host, port, database);
+
         Properties props = new Properties();
-        props.setProperty("user", "morpheus");
-        props.setProperty("password", "MORPHEUS@ADMIN2023");
-        props.setProperty("ssl", "false");
+        props.setProperty("user", user);
+        props.setProperty("password", password);
+        props.setProperty("ssl", sslSecurity);
 
         try {
             conn = DriverManager.getConnection(url, props);
@@ -24,6 +26,7 @@ public class PostgresJDBCDriverConnector {
             } else {
                 logger.info("The connection can't be established with Postgres.");
             }
+
         } catch (SQLException sqlException) {
             logger.severe(sqlException.toString());
         }

@@ -1,18 +1,17 @@
 services:
   postgres:
     container_name: postgres-morpheus
-    image: "postgres:latest"
-  ports:
-    - "5432:5432"
-  environment:
-    - POSTGRES_USER=admin
-    - POSTGRES_PASSWORD=9HQXvYP$&*
-    - POSTGRES_DB=postgres
-  volumes:
-    - postgres-volume:/var/lib/postgresql/data
-  restart: always
+    image: "postgres:15"
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=9HQXvYP$&*
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres-volume:/var/lib/postgresql/data
+      - /usr/local/bin/docker-entrypoint.sh:/docker-entrypoint.sh
+    restart: always
 volumes:
   postgres-volume:
     driver: local
-    driver_opts:
-      size: "1GB"
